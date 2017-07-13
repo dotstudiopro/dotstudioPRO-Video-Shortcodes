@@ -17,6 +17,7 @@ Upload the zip file via the Plugin menu > Add Plugin
 ## Built With
 
 * [Wordpress](http://www.wordpress.org) - CMS
+* [Plugin Update Checker](https://github.com/YahnisElsts/plugin-update-checker) - A really simple plugin update checker that also has a server-side component that makes the process really fluid.
 
 ## Authors
 

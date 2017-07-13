@@ -10,20 +10,20 @@
 if (!defined('ABSPATH'))
     die();
 
+// Plugin Update Checker
+require 'plugin-update-checker/plugin-update-checker.php';
+$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+	'http://updates.wordpress.dotstudiopro.com/wp-update-server/?action=get_metadata&slug=dspdev-video-shortcodes',
+	__FILE__,
+	'dspdev-video-shortcodes'
+);
+
 require_once("functions.php");
-
-// // load css into the website's front-end
-// function dspapi_api_routes_enqueue_style() {
-//     wp_enqueue_style( 'dspapi-api-routes-style', plugins_url( 'styles/style.css', __FILE__ ) );
-// }
-// add_action( 'wp_enqueue_scripts', 'dspapi_api_routes_enqueue_style' );
-
-
 
 /** Add Menu Entry **/
 function dspdev_video_shortcodes_menu() {
 
-	add_menu_page( 'Video Shortcodes', 'Video Shortcodes', 'manage_options', 'dspdev-video-shortcodes', 'dspdev_video_shortcodes_menu_page', 'dashicons-businessman' );
+	add_menu_page( 'Video Shortcodes', 'Video Shortcodes', 'manage_options', 'dspdev-video-shortcodes', 'dspdev_video_shortcodes_menu_page', 'dashicons-video-alt2' );
 
 }
 
