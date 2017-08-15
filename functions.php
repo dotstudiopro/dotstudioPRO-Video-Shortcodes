@@ -3,15 +3,11 @@
 /*** Get new API token ***/
 if(!function_exists('dspdev_get_token')){
     function dspdev_get_token(){
-
 	    $key = get_option('dspdev_auth_api_key');
-
 	    if(!$key) return null;
-
         $curl = curl_init();
-
         curl_setopt_array($curl, array(
-          CURLOPT_URL => "http://api.myspotlight.tv/token",
+          CURLOPT_URL => "https://api.myspotlight.tv/token",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => "",
           CURLOPT_MAXREDIRS => 10,
@@ -19,8 +15,6 @@ if(!function_exists('dspdev_get_token')){
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => "POST",
           CURLOPT_POSTFIELDS => "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"key\"\r\n\r\n$key\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--",
-          // ABS API key: 464f9d1621f0799f4c4b7a2e884b21e4be81d222
-          // Automatic account API Key: 32a70a32da27b30a10fe546ead126f0778c5f00f
           CURLOPT_HTTPHEADER => array(
             "cache-control: no-cache",
             "content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"
@@ -44,12 +38,9 @@ if(!function_exists('dspdev_get_token')){
     }
 }
 
-/*** Set up search queries for video ids ***/
 
-add_action( 'admin_footer', 'dspdev_custom_post_video_selector' ); // Write our JS below here
 
-function dspdev_custom_post_video_selector() {
-
+function dspdev_grab_token() {
     $token = get_option('dspdev_auth_token');
     $exp = get_option('dspdev_auth_token_exp');
 
@@ -61,6 +52,23 @@ function dspdev_custom_post_video_selector() {
         update_option('dspdev_auth_token', $token);
         // Expires in 30 days
         update_option('dspdev_auth_token_exp', time() + (60*60*24*30));
+    }
+    return $token;
+}
+
+/*** Set up search queries for video ids ***/
+
+add_action( 'admin_footer', 'dspdev_custom_post_video_selector' );
+
+function dspdev_custom_post_video_selector() {
+
+    $token = dspdev_grab_token();
+
+    if (!$token) {
+        ?>
+            <h3>We could not get a token to access our API. Please verify your API key.</h3>
+        <?php
+        return;
     }
 
     ?>
@@ -112,7 +120,9 @@ function dspdev_custom_post_video_selector() {
         	}
         });
     });
-    </script> <?php
+    </script>
+
+    <?php
 }
 
 function dspdev_video_shortcode_generator( $atts, $content = null ) {
@@ -140,3 +150,115 @@ function dspdev_save_api_key(){
 }
 
 add_action("init", "dspdev_save_api_key");
+
+
+add_action( 'admin_footer', 'dspdev_playlist_list' );
+
+function dspdev_playlist_list(){
+    $token = dspdev_grab_token();
+
+    if (!$token) {
+        ?>
+            <h3>We could not get a token to access our API. Please verify your API key.</h3>
+        <?php
+        return;
+    }
+
+    ?>
+
+    <script type="text/javascript" >
+    jQuery(document).ready(function($) {
+
+        jQuery("#dspdev_playlist_selector_button").click(function(){
+            if(jQuery("#dspdev_playlist_search").length < 1 || jQuery("#dspdev_playlist_search").val().length < 1) return;
+
+            jQuery("#dspdev_playlist_selector_button").attr('disabled', true);
+            jQuery("#dspdev_playlist_choices > #dspdev_playlist").attr('disabled', true);
+
+            var q = jQuery("#dspdev_playlist_search").val();
+
+            var current = jQuery("#dspdev_playlist_choices > select > option.current");
+
+            $.ajax({
+                url: "https://api.myspotlight.tv/search?q=" + q,
+                headers: {"x-access-token": "<?php echo $token; ?>"},
+                success: function(response) {
+                    jQuery("#dspdev_playlist_selector_button").attr('disabled', false);
+                    jQuery("#dspdev_playlist_choices > select").attr('disabled', false);
+                    if(response.success){
+                        console.log(response.data.hits);
+                        if(response.data.total > 0){
+                            jQuery("#dspdev_playlist_choices > #dspdev_playlist").html('');
+                            if(current.length > 0) jQuery("#dspdev_playlist_choices > #dspdev_playlist").prepend(current);
+                            var title = "";
+                            response.data.hits.forEach(function(hit){
+                                title = hit._source.title;
+                                if(current.attr('value') === hit.slug+"||"+title) return;
+                                jQuery("#dspdev_playlist_choices > #dspdev_playlist").append('<option value="'+hit.slug+'">'+title+'</option>');
+                            });
+                        }
+                    }
+                }
+            });
+
+        });
+
+        jQuery("#dspdev_playlist_shortcode_generator").click(function(){
+            if(jQuery("#dspdev_playlist").val()){
+                var video_css = jQuery("#dspdev_playlist_video_class").val().length > 0 ? "video_css='" + jQuery("#dspdev_playlist_video_class").val() + "'" : "";
+                var show_air_date = parseInt(jQuery("#dspdev_playlist_show_air_date").val()) === 1 ? true : false;
+                var air_date_css = jQuery("#dspdev_playlist_air_date_class").val().length > 0 && show_air_date ?  "air_date_css='" + jQuery("#dspdev_playlist_air_date_class").val() + "'" : "";
+                var shortcode = "[dspdev_playlist_shortcode slug='" + jQuery("#dspdev_playlist").val() + "' " + video_css+ " " + air_date_css + " show_air_date='" + (show_air_date ? 'true' : 'false') + "' ]";
+                jQuery("#dspdev_playlist_shortcode").val(shortcode);
+            }
+        });
+    });
+    </script>
+
+    <?php
+
+}
+
+function dspdev_get_playlist_by_channel_slug() {
+    return array();
+}
+
+function dspdev_playlist_shortcode_generator( $atts, $content = null ) {
+    extract(shortcode_atts(array(
+        "video_css" => '',
+        "show_air_date" => 'false',
+        "air_date_css" => '',
+        "slug" => '',
+    ), $atts));
+    if(empty($slug)) return "";
+
+    $video_css = $atts['video_css'];
+    $air_date_css = $atts['air_date_css'];
+    $show_air_date = json_decode($atts['show_air_date']);
+
+    $template = "<div class='dspdev-playlist-container'>";
+
+    foreach(dspdev_get_playlist_by_channel_slug() as $video) {
+        $template .= "<div class='dspdev-playlist-item'>";
+
+            $template .= "<div class='dspdev-playlist-item-video $video_css'>";
+
+                $template .= "<h4>$video->title <i class='fa fa-video dspdev-show-video' data-video='$video->_id'></h4>";
+
+            $template .= "</div>";
+
+            if(!$show_air_date) continue;
+
+            $template .= "<div class='dspdev-playlist-item-air-date $air_date_css'>";
+
+                $template .= "<h5>Air Date: $video->air_date</h5>";
+
+            $template .= "</div>";
+
+        $template .= "</div>";
+    }
+
+    $template .= "</div>";
+
+    return $template;
+}

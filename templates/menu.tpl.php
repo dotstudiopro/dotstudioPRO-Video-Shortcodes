@@ -31,7 +31,8 @@
          </tfoot>
       </table>
    </form>
-    <h2>dotstudioPRO Video Shortcode Generator</h2>
+
+   <h2>dotstudioPRO Video Shortcode Generator</h2>
    <form action='' method='POST' enctype='multipart/form-data'>
       <table class='form-table widefat'>
          <thead>
@@ -62,6 +63,37 @@
          <tfoot>
          </tfoot>
       </table>
-      <input type='hidden' name='dspdev-save-admin-options' value='1' />
+   </form>
+
+   <h2>dotstudioPRO Playlist Shortcode Generator</h2>
+   <form action='' method='POST' enctype='multipart/form-data'>
+      <table class='form-table widefat'>
+         <thead>
+         </thead>
+         <tbody>
+            <tr>
+               <td>
+                  <div>
+                     <h3>Search:</h3>
+                     <input type='text' id='dspdev_playlist_search' /> <button id='dspdev_playlist_selector_button' type='button'>Search</button>
+                  </div>
+                  <div id='dspdev_playlist_choices'>
+                     <h3>Channel:</h3>
+                     <select id='dspdev_playlist' class='widefat'></select><br/>
+                     <h3>Playlist Options</h4>
+                     Video CSS Class <input id='dspdev_playlist_video_class' /> <br/>
+                     Show Air Date <select id='dspdev_playlist_show_air_date'><option value='1'>Yes</option><option value='0'>No</option></select> <br/>
+                     Air Date CSS Class <input id='dspdev_playlist_air_date_class' /> <br/>
+                     <br/>
+                     <button id='dspdev_playlist_shortcode_generator' type='button' class='button button-secondary'>Generate</button><br/>
+                     <br/>
+                     <textarea id='dspdev_playlist_shortcode' rows='3' class='widefat'></textarea>
+                  </div>
+               </td>
+            </tr>
+         </tbody>
+         <tfoot>
+         </tfoot>
+      </table>
    </form>
 </div>
