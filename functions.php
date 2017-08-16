@@ -193,8 +193,8 @@ function dspdev_playlist_list(){
                             var title = "";
                             response.data.hits.forEach(function(hit){
                                 title = hit._source.title;
-                                if(current.attr('value') === hit.slug+"||"+title) return;
-                                jQuery("#dspdev_playlist_choices > #dspdev_playlist").append('<option value="'+hit.slug+'">'+title+'</option>');
+                                if(current.attr('value') === hit._id) return;
+                                jQuery("#dspdev_playlist_choices > #dspdev_playlist").append('<option value="'+hit._id+'">'+title+'</option>');
                             });
                         }
                     }
@@ -208,7 +208,7 @@ function dspdev_playlist_list(){
                 var video_css = jQuery("#dspdev_playlist_video_class").val().length > 0 ? "video_css='" + jQuery("#dspdev_playlist_video_class").val() + "'" : "";
                 var show_air_date = parseInt(jQuery("#dspdev_playlist_show_air_date").val()) === 1 ? true : false;
                 var air_date_css = jQuery("#dspdev_playlist_air_date_class").val().length > 0 && show_air_date ?  "air_date_css='" + jQuery("#dspdev_playlist_air_date_class").val() + "'" : "";
-                var shortcode = "[dspdev_playlist_shortcode slug='" + jQuery("#dspdev_playlist").val() + "' " + video_css+ " " + air_date_css + " show_air_date='" + (show_air_date ? 'true' : 'false') + "' ]";
+                var shortcode = "[dspdev_playlist_shortcode id='" + jQuery("#dspdev_playlist").val() + "' " + video_css+ " " + air_date_css + " show_air_date='" + (show_air_date ? 'true' : 'false') + "' ]";
                 jQuery("#dspdev_playlist_shortcode").val(shortcode);
             }
         });
@@ -219,7 +219,113 @@ function dspdev_playlist_list(){
 
 }
 
-function dspdev_get_playlist_by_channel_slug() {
+function dspdev_run_curl_command($curl_url, $curl_request_type, $curl_post_fields, $curl_header)
+{
+    // Simplify the cURL execution for various API commands within the curl commands class
+    $curl = curl_init();
+
+    curl_setopt_array($curl, array(
+        CURLOPT_URL => $curl_url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => "",
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => $curl_request_type,
+        CURLOPT_POSTFIELDS => $curl_post_fields,
+        CURLOPT_HTTPHEADER => $curl_header
+    ));
+
+    $response = curl_exec($curl);
+    $err      = curl_error($curl);
+
+    curl_close($curl);
+    return (object) compact('response', 'err');
+}
+
+function dspdev_get_country_by_ip(){
+    /** DEV MODE **/
+    // $dev_check = get_option("ds_development_check");
+    // $dev_country = get_option("ds_development_country");
+
+    // if($dev_check){
+    //     $this->country = $dev_country;
+    //     return $this->country;
+    // }
+    /** END DEV MODE **/
+
+    $token = dspdev_grab_token();
+
+    if(!$token) return false;
+
+    return "US";
+
+    $result = dspdev_run_curl_command("http://api.myspotlight.tv/country",
+        "POST", "-----011000010111000001101001\r\nContent-Disposition: form-data; name=\"ip\"\r\n\r\n".dspdev_get_ip()."\r\n-----011000010111000001101001\r\nContent-Disposition: form-data; name=\"token\"\r\n\r\n\r\n-----011000010111000001101001--",
+        array(
+            "cache-control: no-cache",
+            "content-type: multipart/form-data; boundary=---011000010111000001101001",
+            "x-access-token:".$token
+        ));
+
+
+
+    if ($result->err) {
+        $error = "cURL Error: $err";
+    } else {
+        $r = json_decode($result->response);
+        if($r->success){
+            $this->country = $r->data->countryCode;
+            return $this->country;
+        } else {
+            // Maybe log this somewhere?
+            return false;
+        }
+    }
+}
+
+function dspdev_get_ip(){
+
+    if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
+    //check ip from share internet
+    $ip = $_SERVER['HTTP_CLIENT_IP'];
+    } elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+    //to check ip is pass from proxy
+    $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    } else {
+    $ip = $_SERVER['REMOTE_ADDR'];
+    }
+    return $ip;
+
+}
+
+function dspdev_get_playlist_by_channel_id($id) {
+    $country = dspdev_get_country_by_ip();
+    if(!$country) return array();
+    $token = dspdev_grab_token();
+    if(!$token) return array();
+
+    $url = "http://api.myspotlight.tv/channel/".$country."/id/".$id."?detail=partial";
+
+    $result = dspdev_run_curl_command($url,
+            "GET", "-----011000010111000001101001\r\nContent-Disposition: form-data; name=\"ip\"\r\n\r\n".dspdev_get_ip()."\r\n-----011000010111000001101001--",
+            array(
+                "cache-control: no-cache",
+                "content-type: multipart/form-data; boundary=---011000010111000001101001",
+                "postman-token: a917610f-ab5b-ef69-72a7-dacdc00581ee",
+                "x-access-token:".$token
+            ));
+    if ($result->err) {
+        $error = "cURL Error: $err";
+    } else {
+        $r = json_decode($result->response);
+        if($r->success){
+            return $r->data;
+        } else {
+            // Maybe log this somewhere?
+            return false;
+        }
+    }
     return array();
 }
 
@@ -228,30 +334,38 @@ function dspdev_playlist_shortcode_generator( $atts, $content = null ) {
         "video_css" => '',
         "show_air_date" => 'false',
         "air_date_css" => '',
-        "slug" => '',
+        "id" => '',
     ), $atts));
-    if(empty($slug)) return "";
+    if(empty($atts['id'])) return "";
 
-    $video_css = $atts['video_css'];
-    $air_date_css = $atts['air_date_css'];
-    $show_air_date = json_decode($atts['show_air_date']);
+    $video_css = !empty($atts['video_css']) ? $atts['video_css'] : "";
+    $air_date_css = !empty($atts['air_date_css']) ? $atts['air_date_css'] : "";
+    $show_air_date = !empty($atts['show_air_date']) ? json_decode($atts['show_air_date']) : "";
 
     $template = "<div class='dspdev-playlist-container'>";
 
-    foreach(dspdev_get_playlist_by_channel_slug() as $video) {
+    $channel = dspdev_get_playlist_by_channel_id($id);
+
+    if(!$channel) return "";
+
+
+
+    foreach($channel->playlist as $video) {
         $template .= "<div class='dspdev-playlist-item'>";
 
             $template .= "<div class='dspdev-playlist-item-video $video_css'>";
 
-                $template .= "<h4>$video->title <i class='fa fa-video dspdev-show-video' data-video='$video->_id'></h4>";
+                $template .= "<h4>$video->title <img src='" . plugin_dir_url(__FILE__) . "/assets/images/play.png' class='dspdev-show-video' data-title='" . str_replace("'", "&#39;", $video->title) . "' data-video='$video->_id' /></h4>";
 
             $template .= "</div>";
 
             if(!$show_air_date) continue;
 
+            $air_date = date('F jS Y', strtotime($video->created_at));
+
             $template .= "<div class='dspdev-playlist-item-air-date $air_date_css'>";
 
-                $template .= "<h5>Air Date: $video->air_date</h5>";
+                $template .= "<h5>Air Date: $air_date</h5>";
 
             $template .= "</div>";
 
@@ -261,4 +375,17 @@ function dspdev_playlist_shortcode_generator( $atts, $content = null ) {
     $template .= "</div>";
 
     return $template;
+}
+
+add_shortcode("dspdev_playlist_shortcode", "dspdev_playlist_shortcode_generator");
+
+add_action('wp_head', 'dspdev_add_iframe_bg_loader');
+
+function dspdev_add_iframe_bg_loader(){
+    echo "<style>.dspdev-show-video-modal-iframe {
+        background-image: url('" . plugin_dir_url(__FILE__) . "/assets/images/loader.svg');
+        background-repeat: no-repeat;
+        /* background-attachment: fixed; */
+        background-position: center;
+    };</style>";
 }

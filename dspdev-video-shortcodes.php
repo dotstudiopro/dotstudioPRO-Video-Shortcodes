@@ -65,3 +65,12 @@ function dspdev_video_shortcodes_menu_page() {
 
 }
 /** End Menu Entry **/
+
+
+add_action('wp_enqueue_scripts', 'dspdev_video_shortcodes_plugin_scripts_styles');
+
+function dspdev_video_shortcodes_plugin_scripts_styles()
+{
+    wp_enqueue_style('dspdev-video-shortcodes-style', plugin_dir_url(__FILE__) . "css/style.css");
+    wp_enqueue_script('dspdev-video-shortcodes-scripts', plugin_dir_url(__FILE__) . "js/scripts.js", array("jquery"));
+}

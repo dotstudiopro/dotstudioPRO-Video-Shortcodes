@@ -1,0 +1,50 @@
+html, body {
+  margin:0;
+  padding:0;
+  height:100%;
+}
+
+.dspdev-show-video {
+    vertical-align: middle;
+    margin-top: -4px;
+    cursor: pointer;
+}
+
+.dspdev-grey-modal-background {
+	z-index: 999;
+	width: 100%;
+	height: 100%;
+	position: fixed;
+    top: 0px;
+    left: 0px;
+	background-color: rgba(102, 102, 102, .5);
+}
+
+.dspdev-show-video-modal {
+	position: absolute;
+    top: 20%;
+    left: 20%;
+    width: 60%;
+    z-index: 1000;
+    background-color: #fff;
+    border-radius: 10px;
+}
+
+.dspdev-show-video-modal-title {
+	text-align: center;
+    font-weight: bold;
+}
+
+.dspdev-show-video-modal-iframe {
+	margin: 2% 10% 10% 10%;
+    width: 80%;
+    height: 56.25%;
+    min-height: 360px;
+    background-color: #000;
+}
+
+.dspdev-show-video-modal-close {
+	float: right;
+    margin: 10px 15px -10px 0px;
+    cursor: pointer;
+}
