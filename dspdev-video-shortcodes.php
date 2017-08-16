@@ -68,6 +68,7 @@ function dspdev_video_shortcodes_menu_page() {
 
 
 add_action('wp_enqueue_scripts', 'dspdev_video_shortcodes_plugin_scripts_styles');
+add_action('admin_enqueue_scripts', 'dspdev_video_shortcodes_plugin_scripts_styles');
 
 function dspdev_video_shortcodes_plugin_scripts_styles()
 {

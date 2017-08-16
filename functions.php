@@ -73,53 +73,7 @@ function dspdev_custom_post_video_selector() {
 
     ?>
     <script type="text/javascript" >
-    jQuery(document).ready(function($) {
 
-        jQuery("#dspdev_video_selector_button").click(function(){
-            if(jQuery("#dspdev_video_search").length < 1 || jQuery("#dspdev_video_search").val().length < 1) return;
-
-            jQuery("#dspdev_video_selector_button").attr('disabled', true);
-            jQuery("#dspdev_video_choices > select").attr('disabled', true);
-
-            var q = jQuery("#dspdev_video_search").val();
-
-            var current = jQuery("#dspdev_video_choices > select > option.current");
-
-            $.ajax({
-                url: "https://api.myspotlight.tv/search/videos?q=" + q,
-                headers: {"x-access-token": "<?php echo $token; ?>"},
-                success: function(response) {
-                    jQuery("#dspdev_video_selector_button").attr('disabled', false);
-                    jQuery("#dspdev_video_choices > select").attr('disabled', false);
-                    if(response.success){
-                        console.log(response.data.hits);
-                        if(response.data.total > 0){
-                            jQuery("#dspdev_video_choices > select").html('');
-                            if(current.length > 0) jQuery("#dspdev_video_choices > select").prepend(current);
-                            var title = "";
-                            response.data.hits.forEach(function(hit){
-                                title = hit._source.title;
-                                if(current.attr('value') === hit._id+"||"+title) return;
-                                jQuery("#dspdev_video_choices > select").append('<option value="'+hit._id+'">'+title+'</option>');
-                            });
-                        }
-                    }
-                }
-            });
-
-        });
-
-        jQuery("#dspdev_video_shortcode_generator").click(function(){
-        	if(jQuery("#dspdev_video").val()){
-        		var autostart = jQuery("#dspdev_video_autostart:checked").length > 0 ? "autostart='true'" : "autostart='false'";
-        		var loop = jQuery("#dspdev_video_loop:checked").length > 0 ? "loop='true'" : "loop='false'";
-        		var width = jQuery("#dspdev_video_width").val() > 0 ? "width='" + jQuery("#dspdev_video_width").val() + "'" : "width='640'";
-        		var height = jQuery("#dspdev_video_height").val() > 0 ? "height='" + jQuery("#dspdev_video_height").val() + "'" : "height='480'";
-        		var shortcode = "[dspdev_video_shortcode video='" + jQuery("#dspdev_video").val() + "' " + autostart + " " + loop + " " + width + " " + height + " ]";
-        		jQuery("#dspdev_video_shortcode").val(shortcode);
-        	}
-        });
-    });
     </script>
 
     <?php
@@ -177,7 +131,7 @@ function dspdev_playlist_list(){
 
             var q = jQuery("#dspdev_playlist_search").val();
 
-            var current = jQuery("#dspdev_playlist_choices > select > option.current");
+            var current = jQuery("#dspdev_playlist_choices > #dspdev_playlist > option.current");
 
             $.ajax({
                 url: "https://api.myspotlight.tv/search?q=" + q,
@@ -388,4 +342,13 @@ function dspdev_add_iframe_bg_loader(){
         /* background-attachment: fixed; */
         background-position: center;
     };</style>";
+}
+add_action('admin_head', 'dspdev_add_token_to_head');
+
+function dspdev_add_token_to_head(){
+    $token = dspdev_grab_token();
+
+    if (!$token) return;
+
+    echo "<script>window.dspdev_token = '$token';</script>";
 }
