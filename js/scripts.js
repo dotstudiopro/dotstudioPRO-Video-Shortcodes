@@ -36,10 +36,15 @@ function dspdev_video_shortcodes_playlist_iframes_setup() {
 			iframe.src = "http://wp.dotstudiopro.com/player/" + video + "?skin=228b22";
 			iframe.setAttribute('frameBorder', 0);
 
+			// Set up iframe wrapper
+			var wrapper = document.createElement('div');
+			wrapper.classList.add('dspdev-videoWrapper');
+			wrapper.appendChild(iframe);
+
 			// Stuff the iframe and title into the modal
 			modal.appendChild(close);
 			modal.appendChild(titleContainer);
-			modal.appendChild(iframe);
+			modal.appendChild(wrapper);
 
 			// Set up grey box
 			var grey = document.createElement('div');

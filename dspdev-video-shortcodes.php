@@ -2,7 +2,7 @@
 
 /*
 ** Plugin Name: dotstudioPRO Video Shortcodes
-** Version: 1.01
+** Version: 1.02
 ** Author: dotstudioPRO
 ** Author URI: http://dotstudiopro.com
 ** Description: Create shortcodes to embed videos and playlist info from your dotstudioPRO dashboard.
