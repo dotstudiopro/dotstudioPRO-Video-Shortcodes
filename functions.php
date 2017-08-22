@@ -302,9 +302,15 @@ function dspdev_playlist_shortcode_generator( $atts, $content = null ) {
 
     if(!$channel) return "";
 
+    $playlist = array();
 
+    if(!empty($channel->playlist)){
+        $playlist = $channel->playlist;
+    } else if(empty($channel->playlist) && !empty($channel->video)){
+        $playlist = array($channel->video);
+    }
 
-    foreach($channel->playlist as $video) {
+    foreach($playlist as $video) {
         $template .= "<div class='dspdev-playlist-item'>";
 
             $template .= "<div class='dspdev-playlist-item-video $video_css'>";
@@ -313,15 +319,17 @@ function dspdev_playlist_shortcode_generator( $atts, $content = null ) {
 
             $template .= "</div>";
 
-            if(!$show_air_date) continue;
+            if($show_air_date && !empty($video->created_at)){
 
-            $air_date = date('F jS Y', strtotime($video->created_at));
+                $air_date = date('F jS Y', strtotime($video->created_at));
 
-            $template .= "<div class='dspdev-playlist-item-air-date $air_date_css'>";
+                $template .= "<div class='dspdev-playlist-item-air-date $air_date_css'>";
 
-                $template .= "<h5>Air Date: $air_date</h5>";
+                    $template .= "<h5>Air Date: $air_date</h5>";
 
-            $template .= "</div>";
+                $template .= "</div>";
+
+            }
 
         $template .= "</div>";
     }
