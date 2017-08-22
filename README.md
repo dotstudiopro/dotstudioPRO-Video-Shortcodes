@@ -14,6 +14,11 @@ Wordpress >= 4.5
 
 Upload the zip file via the Plugin menu > Add Plugin
 
+### Updates
+
+1.01 - Added Playlist Shortcode functionality
+1.02 - Added ability to embed a playlist of only one video
+
 ## Built With
 
 * [Wordpress](http://www.wordpress.org) - CMS
